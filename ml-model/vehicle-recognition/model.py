@@ -7,6 +7,7 @@ import torch.optim as optim
 from torchvision import transforms, models
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
+import boto3
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
@@ -124,11 +125,23 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, device, 
     model.load_state_dict(best_model_weights)
     return model
 
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    """Upload a file to an S3 bucket."""
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Model uploaded to S3 bucket '{bucket_name}' as '{object_name}'.")
+    except Exception as e:
+        print(f"Error uploading to S3: {e}")
+
 # Main Function
 if __name__ == "__main__":
     # Paths to your train and test datasets
-    train_dir = "/Users/shanawazeshaik/myrepo/ml-models/vehicle-recognition/train"
-    test_dir = "/Users/shanawazeshaik/myrepo/ml-models/vehicle-recognition/test"
+    train_dir = ""
+    test_dir = ""
     
     # Load datasets
     train_dataset, test_dataset = load_datasets(train_dir, test_dir)
@@ -152,5 +165,11 @@ if __name__ == "__main__":
     trained_model = train_model(model, criterion, optimizer, train_loader, test_loader, device, num_epochs)
     
     # Save the model
-    torch.save(trained_model.state_dict(), 'vehicle_recognition_model.pth')
+    model_path = 'vehicle_recognition_model.pth'
+    torch.save(trained_model.state_dict(), model_path)
     print("Model training completed and saved as 'vehicle_recognition_model.pth'")
+    
+    # S3 upload
+    s3_bucket_name = "shaikmlmodeltest"
+    s3_object_name = "models/vehicle_recognition_model.pth"  # Example S3 key
+    upload_to_s3(model_path, s3_bucket_name, s3_object_name)

@@ -6,9 +6,6 @@ import torch.nn as nn
 from PIL import Image
 import os
 from io import BytesIO
-os.environ["AWS_ACCESS_KEY_ID"] = ""
-os.environ["AWS_SECRET_ACCESS_KEY"] = ""
-os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 # Function to load the trained model
 def load_model(model_path, num_classes):
@@ -61,7 +58,7 @@ def get_model_from_s3(bucket_name, object_name, num_classes):
         model_data = response['Body'].read()  # Read the file content
 
         # Load the state_dict with CPU mapping
-        state_dict = torch.load(BytesIO(model_data), map_location=torch.device('cpu'))  # Load directly from BytesIO
+        state_dict = torch.load(BytesIO(model_data), map_location=torch.device('cpu'), weights_only=True)  # Load directly from BytesIO
 
         # Load the model architecture
         model = models.resnet50()  # Match your training architecture
@@ -80,7 +77,7 @@ def get_model_from_s3(bucket_name, object_name, num_classes):
 if __name__ == "__main__":
     # Paths and settings
     #model_path = 'drive/MyDrive/Colab Notebooks/vehicles/vehicle_recognition_model.pth'  # Path to your saved model
-    image_path = 'drive/MyDrive/Colab Notebooks/vehicles/test_pictures/train2.jpeg'        # Replace with the path to your image
+    images_folder = 'test_images'        # Replace with the path to your image
     class_names = ['Auto Rickshaw', 'Bicycle', 'Car', 'Motorcycle', 'Plane', 'Ship', 'Train']  # Replace with your actual class names
 
     # Load the model
@@ -88,12 +85,17 @@ if __name__ == "__main__":
     object_name = "models/vehicle_recognition_model.pth"
     num_classes = len(class_names)
     model = get_model_from_s3(bucket_name, object_name, num_classes)
+    
+    # Iterate through the folder for all images
+    for image in os.listdir(images_folder):
+        image_path = os.path.join(images_folder, image)
+        
+        if image.endswith(('.jpeg', '.jpg', '.png')):
+            # Preprocess the input image
+            image_tensor = preprocess_image(image_path)
 
-    # Preprocess the input image
-    image_tensor = preprocess_image(image_path)
+            # Predict the class of the image
+            predicted_class = predict_image(model, image_tensor, class_names)
 
-    # Predict the class of the image
-    predicted_class = predict_image(model, image_tensor, class_names)
-
-    # Output the prediction
-    print(f"\nI know what that is, that's a {predicted_class}!")
+            # Output the prediction
+            print(f"\nI know what that is, that's a {predicted_class}!")

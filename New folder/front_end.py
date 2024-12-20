@@ -39,17 +39,18 @@ def traverse(image_number):
     global image_pos
     global button_back
     global button_forward
-    
+
     image_pos += image_number
     my_label.grid_forget()
-    my_label = Label(image=image_list[image_pos])
+    if image_pos >= 0 and image_pos < len(image_list):
+        my_label = Label(image=image_list[image_pos])
     button_forward['state'] = NORMAL
     button_back['state'] = NORMAL
 
-    if image_pos == (len(image_list)-1):
+    if image_pos >= (len(image_list)-1):
         button_forward['state'] = DISABLED
             
-    if image_pos == 0:
+    if image_pos <= 0:
         button_back['state'] = DISABLED
             
     my_label.grid(row=0, column=0, columnspan=3)
@@ -63,6 +64,7 @@ def get_Report():
     global image_list
     global image_pos
     global image_files
+    global url_entry
 
     print(image_files)
     imagePathToSend = image_path + '/' + image_files[image_pos]
@@ -71,7 +73,7 @@ def get_Report():
 ##    response = requests.post(url, files=files)
     print(url)
     with open(imagePathToSend, "rb") as f:
-        response = requests.post(url, data=f.read())
+        response = requests.post(url_entry.get(), data=f.read())
     print("Status Code:", response.status_code)
     print("Response Text:", response.text)
 
@@ -84,6 +86,12 @@ button_back.grid(row=1, column=0)
 button_forward.grid(row=1, column=2)
 button_selectDirectory.grid(row=2, column=0)
 button_getReport.grid(row=2, column=1)
+
+url_entry = Entry(root)
+url_entry.insert(0, url)
+url_entry.grid(row=3, columnspan=3, sticky="ew")
+
+
 
 start(os.getcwd())
 

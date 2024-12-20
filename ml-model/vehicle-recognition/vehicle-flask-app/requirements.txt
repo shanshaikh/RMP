@@ -1,5 +1,6 @@
+Flask
 torch
 torchvision
 boto3
-pillow
-tk
+Pillow
+werkzeug

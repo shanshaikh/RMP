@@ -89,7 +89,7 @@ def get_Report():
     imagePathToSend = image_path + '/' + image_files[image_pos]
 
     # Backend API URL (Replace with your backend's actual IP or domain)
-    backend_url = "http://<YOUR_BACKEND_PUBLIC_IP>:5000/predict"
+    backend_url = "http://18.212.33.234:5000/predict"
 
     try:
         # Send the image to the backend

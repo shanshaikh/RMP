@@ -37,6 +37,13 @@ def preprocess_image(image):
     return transform(image).unsqueeze(0)
 
 # Predict the image class
+def predict_image(model, image_tensor, class_names):
+    with torch.no_grad():
+        outputs = model(image_tensor)
+        _, predicted = torch.max(outputs, 1)
+        return class_names[predicted.item()]
+
+# Predict the image class
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -46,7 +53,7 @@ def predict():
 
         # Get the uploaded image
         file = request.files["image"]
-        image = Image.open(file.stream).convert('RGB')
+        image = Image.open(BytesIO(file.read())).convert('RGB')
 
         # Load the model from S3 (Replace with your S3 details)
         bucket_name = "shaikmlmodeltest"
